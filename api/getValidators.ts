@@ -22,7 +22,6 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
           $lt: new Date(endDate),
         },
       })
-      .limit(1000)
       .toArray();
   } else {
     result = await db
