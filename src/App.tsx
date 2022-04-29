@@ -1,26 +1,74 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import axios from "axios";
+import React, { useCallback, useEffect, useState } from "react";
+import "./App.css";
+import { Input, Table } from "./components";
+import useFetch from "./hooks/searchDuplicates";
 
-function App() {
+export interface inputDataType {
+  startDate: string;
+  endDate: string;
+  address: string;
+}
+
+const App: React.FC<any> = () => {
+  const [inputData, setInputData] = useState<inputDataType>({
+    startDate: "",
+    endDate: "",
+    address: "",
+  });
+  const [data, loading] = useFetch(
+    inputData.startDate,
+    inputData.endDate,
+    inputData.address
+  );
+
+  const [selectedVali, setSelectedvai] = useState();
+
+  const setTable = useCallback(
+    function setTable() {
+      if (loading && inputData.startDate && inputData.endDate) {
+        return <h1>Loading..</h1>;
+      } else if (!loading && data) {
+        return (
+          <div>
+            <Table apiData={data} setSelectedValidators={setSelectedvai} />
+            <button
+              onClick={() => {
+                setInputData({
+                  address: inputData?.address,
+                  startDate: data[data.length - 1].date,
+                  endDate: inputData?.endDate,
+                });
+              }}
+            >
+              Get more
+            </button>
+          </div>
+        );
+      }
+    },
+    [data, inputData, loading]
+  );
+
+  useEffect(() => {
+    if (selectedVali) {
+      console.log(selectedVali);
+      axios.post("/api/deleteValidators", selectedVali);
+      setSelectedvai(undefined);
+      setInputData({
+        address: inputData?.address,
+        startDate: data[data.length - 1].date,
+        endDate: inputData?.endDate,
+      });
+    }
+  }, [data, inputData?.address, inputData?.endDate, selectedVali]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="tableContainer">
+      <Input setInputData={setInputData} />
+      {setTable()}
     </div>
   );
-}
+};
 
 export default App;
