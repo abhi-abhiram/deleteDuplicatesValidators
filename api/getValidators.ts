@@ -11,7 +11,7 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
   await client.connect();
   const db = client.db(config.dbName);
   const { address } = req.body;
-  let result;
+  let result: any[];
 
   let start_date = new Date(req.body.startDate).toUTCString().slice(0, -4);
   let end_date = new Date(req.body.endDate).toUTCString().slice(0, -4);
@@ -43,27 +43,21 @@ module.exports = async function (req: VercelRequest, res: VercelResponse) {
       .toArray();
   }
 
-  const trackEpoch: number[] = [];
+  const output: any[] = [];
 
-  const output = [];
-  for (let count1 = 0; count1 < result.length; count1++) {
-    if (trackEpoch.includes(result[count1].epoch)) {
-      continue;
-    } else {
-      trackEpoch.push(trackEpoch.push(result[count1].epoch));
-    }
-
-    for (let count2 = 0; count2 < result.length; count2++) {
+  result.forEach((value1, index1) => {
+    result.forEach((value2, index2) => {
       if (
-        result[count1].validator === result[count2].validator &&
-        result[count1].epoch === result[count2].epoch &&
-        result[count1].searchedAddress === result[count2].searchedAddress &&
-        count1 !== count2
+        value1.validator === value2.validator &&
+        value1.epoch === value2.epoch &&
+        value1.searchedAddress === value2.searchedAddress &&
+        index1 !== index2
       ) {
-        output.push(result[count2]);
+        result.splice(index2, 1);
+        output.push(value2);
       }
-    }
-  }
+    });
+  });
 
   res.status(200).json(output);
 };
